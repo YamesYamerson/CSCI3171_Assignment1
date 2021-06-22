@@ -8,7 +8,7 @@ import threading
 ###       A Basic Socket Web Server       ###
 #############################################
 #Constants
-HEADER = 64
+HEADER = 1024
 PORT = 5050 #Port to listen to
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
@@ -19,44 +19,23 @@ serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Standard loopb
 #Prepare a sever socket
 serverSocket.bind(ADDR) #binds socket to address
 
-
-def handle_client(conn, addr):
+def handle_client(connectionSocket, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
 
     connected = True
     while connected:
-        message_length = conn.recv(HEADER).decode(FORMAT)
-        message_length = int(message_length)
-        message = conn.recv(message_length).decode(FORMAT)
+        message_length = connectionSocket.recv(HEADER).decode(FORMAT)
+        if message_length:
+            message_length = int(message_length)
+            message = connectionSocket.recv(message_length).decode(FORMAT)
+            filename = message.split()[1]
+            if message == DISCONNECT_MESSAGE:
+                connected = False
 
-        if message == DISCONNECT_MESSAGE:
-            connected = False
+            print(f"[{addr}]{message}")
+            connectionSocket.send("Message Received".encode(FORMAT))
 
-        print(f"[{addr}]{message}")
-
-        conn.close()
-
-
-#handles new connections and distributes them
-def start():
-    serverSocket.listen()
-    print(f"[LISTENING] Server is listening on {SERVER}")
-
-    while True:
-        conn, addr = serverSocket.accept() #waits for new connection from server
-        thread = threading.Thread(target=handle_client, args=(conn, addr))
-        thread.start()
-        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
-
-print("[STARTING] server is starting...")
-
-start() 
-
-#while True:
-#Establish the connection
-#       print('Ready to serve...') #Waiting Message
-#    connectionSocket, addr = serverSocket.accept() #Accepts connection socket
-
+    connectionSocket.close()
 #try:
 #    message = connectionSocket.recv(1024)
 #    filename = message.split()[1]
@@ -72,6 +51,30 @@ start()
 #    connectionSocket.send("\r\n".encode())
 #    connectionSocket.close()
 #
+
+#handles new connections and distributes them
+def start():
+    serverSocket.listen()
+    print(f"[LISTENING] Server is listening on {SERVER}")
+
+    while True:
+        conn, addr = serverSocket.accept() #waits for new connection from server
+        thread = threading.Thread(target=handle_client, args=(conn, addr))
+        thread.start()
+        print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
+
+print("[STARTING] server is starting...")
+
+start()
+
+
+
+#while True:
+#Establish the connection
+#       print('Ready to serve...') #Waiting Message
+#    connectionSocket, addr = serverSocket.accept() #Accepts connection socket
+
+
 #except IOError:
 #    #Send response message for file not found
 #    #Fill in start
