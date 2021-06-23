@@ -48,8 +48,7 @@ def handle_client(connectionSocket, addr):
 
         except IOError:
             connectionSocket.send("[404] File Not Found")
-            connectionSocket.close()           #Fill in start
-
+            connectionSocket.close()
             sys.exit()  # Terminate the program after sending the corresponding data
 
 
