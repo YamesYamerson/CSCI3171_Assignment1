@@ -1,6 +1,6 @@
 import socket
 
-HEADER = 64
+HEADER = 1024
 PORT = 5050 #Port to listen to
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "DISCONNECT"
@@ -20,4 +20,4 @@ def send(msg):
     client.send(message)
     print(client.recv(2048).decode()) #message buffer
 
-#send("Hello World!")
+

@@ -1,7 +1,6 @@
 #import socket module
 import socket
 import sys # In order to terminate the program
-import struct
 import threading
 
 #############################################
@@ -15,48 +14,48 @@ ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
 DISCONNECT_MESSAGE = "DISCONNECT"
 
-serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Standard loopback interface address
 #Prepare a sever socket
+serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Standard loopback interface address
 serverSocket.bind(ADDR) #binds socket to address
+
+
 
 def handle_client(connectionSocket, addr):
     print(f"[NEW CONNECTION] {addr} connected.")
 
     connected = True
     while connected:
-        message_length = connectionSocket.recv(HEADER).decode(FORMAT)
-        if message_length:
-            message_length = int(message_length)
-            message = connectionSocket.recv(message_length).decode(FORMAT)
+        try:
+            message = connectionSocket.recv(1024)
+            print(f"[MESSAGE] {message}\n [SPLIT MESSAGE] {message.split()[0]}")
             filename = message.split()[1]
-            if message == DISCONNECT_MESSAGE:
-                connected = False
+            f = open(filename[1:])
+            outputdata = f.read()
+            print(f"[OUTPUT DATA] {outputdata}")
 
-            print(f"[{addr}]{message}")
+            #Send HTTP header line into socket
+            connectionSocket.send(outputdata)
+            for i in range(0, len(outputdata)):
+                connectionSocket.send(outputdata[i].encode())
+                connectionSocket.send("\r\n".encode())
+                connectionSocket.close()
+
+                if message == DISCONNECT_MESSAGE:
+                    connectionSocket.close()
+
             connectionSocket.send("Message Received".encode(FORMAT))
+            sys.exit()  # Terminate the program after sending the corresponding data
 
-    connectionSocket.close()
-#try:
-#    message = connectionSocket.recv(1024)
-#    filename = message.split()[1]
-#    f = open(filename[1:])
-#    outputdata = #Fill in start #Fill in end
-#    #Send one HTTP header line into socket
-#    #Fill in start
-#    #Fill in end
-#    #Send the content of the requested file to the client
-#
-#for i in range(0, len(outputdata)):
-#    connectionSocket.send(outputdata[i].encode())
-#    connectionSocket.send("\r\n".encode())
-#    connectionSocket.close()
-#
+        except IOError:
+            connectionSocket.send("[404] File Not Found")
+            connectionSocket.close()           #Fill in start
 
-#handles new connections and distributes them
+            sys.exit()  # Terminate the program after sending the corresponding data
+
+
 def start():
     serverSocket.listen()
     print(f"[LISTENING] Server is listening on {SERVER}")
-
     while True:
         conn, addr = serverSocket.accept() #waits for new connection from server
         thread = threading.Thread(target=handle_client, args=(conn, addr))
@@ -66,25 +65,13 @@ def start():
 print("[STARTING] server is starting...")
 
 start()
+handle_client()
+
+
+#REFS#
+#Python Socket Programming Tutorial -Tech With Tim
+#https://zetcode.com/python/socket/
+#https://www.pluralsight.com/guides/web-scraping-with-request-python
 
 
 
-#while True:
-#Establish the connection
-#       print('Ready to serve...') #Waiting Message
-#    connectionSocket, addr = serverSocket.accept() #Accepts connection socket
-
-
-#except IOError:
-#    #Send response message for file not found
-#    #Fill in start
-#    #Fill in end
-#    #Close client socket
-#    #Fill in start
-#    #Fill in end
-#    serverSocket.close()
-#    sys.exit()#Terminate the program after sending the corresponding data
-#
-#
-#    #REFS#
-#    #Python Socket Programming Tutorial -Tech With Tim
